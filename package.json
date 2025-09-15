@@ -23,3 +23,14 @@
     "autoprefixer": "^10.4.16"
   }
 }
+{
+  "name": "zeiterfassung-pwa",
+  "version": "1.0.0",
+  "dependencies": {
+    "web-push": "^3.6.6"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Build complete'"
+  }
+}
