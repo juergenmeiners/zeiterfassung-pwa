@@ -107,7 +107,7 @@ const TimeTrackingApp = () => {
     if (!startTime || totalHours <= 0) return '--:--';
     
     const startMinutes = timeToMinutes(startTime);
-    const workMinutes = totalHours * settings.timeGrade * 60;
+    const workMinutes = totalHours / settings.timeGrade * 60;
     let endMinutes = startMinutes + workMinutes;
     
     // Add breaks that fall within working hours and adjust end time
