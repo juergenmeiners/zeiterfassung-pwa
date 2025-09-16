@@ -11,7 +11,7 @@ interface AlarmState {
 interface AlarmDialogProps {
   alarm: AlarmState | null;
   onDismiss: () => void;
-  onTimer: (minutes: number) => void;
+  onSnooze: (minutes?: number) => void; // ? hinzufügen für optional
 }
 
 const AlarmDialog: React.FC<AlarmDialogProps> = ({ alarm, onDismiss, onTimer }) => {
