@@ -20,7 +20,7 @@ export const useAlarmManager = () => {
   const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
   const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null);
   
-  const alarmTimeouts = useRef<Map<string, number>>(new Map());
+  const alarmTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const isPlaying = useRef(false);
 
   // Initialize audio context
