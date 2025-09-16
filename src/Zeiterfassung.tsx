@@ -3,6 +3,7 @@ import { Plus, Trash2, Settings, Clock, Bell } from 'lucide-react';
 import { useAlarmManager } from './hooks/useAlarmManager';
 import AlarmDialog from './components/AlarmDialog';
 import AlarmSettings from './components/AlarmSettings';
+import { Order, Settings as SettingsType } from './types';
 
 interface Order {
   id: number;
@@ -11,8 +12,8 @@ interface Order {
 }
 
 const TimeTrackingApp = () => {
-  const [orders, setOrders] = useState([]);
-  const [settings, setSettings] = useState(() => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [settings, setSettings] = useState<SettingsType>(() => {
     // Load settings from localStorage or use defaults
     const savedSettings = localStorage.getItem('zeiterfassung-settings');
     if (savedSettings) {
