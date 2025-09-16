@@ -30,7 +30,7 @@ const TimeTrackingApp = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showAlarmSettings, setShowAlarmSettings] = useState(false);
   const [alarmEnabled, setAlarmEnabled] = useState(false);
-  const [alarmTimeout, setAlarmTimeout] = useState(null);
+  const [alarmTimeout, setAlarmTimeout] = useState<NodeJS.Timeout | null>(null);
   const [currentTime, setCurrentTime] = useState('');
 
   // Use the professional alarm manager
@@ -86,7 +86,7 @@ const TimeTrackingApp = () => {
   setOrders(orders.filter(order => order.id !== id));
 };
 
- const updateOrder = (id: number, field: keyof Order, value: string | number) => {
+ const updateOrder = (id: number, field: string, value: string | number) => {
   setOrders(orders.map(order => 
     order.id === id ? { ...order, [field]: value } : order
   ));
@@ -186,7 +186,7 @@ const TimeTrackingApp = () => {
     };
   }, [alarmEnabled, orders, useCurrentTime, workStartTime, settings, endTime]);
 
-  const triggerLegacyAlarm = (endTime) => {
+  const triggerLegacyAlarm = (endTime: string) => {
     // Visual alarm
     document.body.style.backgroundColor = '#FEE2E2';
     setTimeout(() => {
