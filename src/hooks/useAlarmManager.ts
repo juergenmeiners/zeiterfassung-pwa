@@ -33,14 +33,14 @@ export const useAlarmManager = () => {
   const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
   const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null);
   
-  const alarmTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const alarmTimeouts = useRef<Map<string, number>>(new Map());
   const isPlaying = useRef(false);
 
   // Initialize audio context
   useEffect(() => {
     const initAudio = async () => {
       try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
         setAudioContext(ctx);
       } catch (error) {
         console.warn('Audio context not available:', error);
