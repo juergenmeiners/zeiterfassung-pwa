@@ -1,20 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AlarmConfig, AlarmState } from '../types';
 
-export interface AlarmConfig {
-  breakReminder?: string;
-  endReminder?: string;
-  maxHoursWarning?: number;
-  overtimeWarning?: boolean;
-}
-
-export interface AlarmState {
-  isActive: boolean;
-  type: string;
-  message: string;
-  time: string;
-}
-
 interface PushSubscription {
   endpoint: string;
   keys: {
