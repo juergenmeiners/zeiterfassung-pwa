@@ -88,15 +88,15 @@ const TimeTrackingApp = () => {
     setOrders([...orders, newOrder]);
   };
 
-  const removeOrder = (id) => {
-    setOrders(orders.filter(order => order.id !== id));
-  };
+  const removeOrder = (id: number) => {
+  setOrders(orders.filter(order => order.id !== id));
+};
 
-  const updateOrder = (id, field, value) => {
-    setOrders(orders.map(order => 
-      order.id === id ? { ...order, [field]: value } : order
-    ));
-  };
+ const updateOrder = (id: number, field: keyof Order, value: string | number) => {
+  setOrders(orders.map(order => 
+    order.id === id ? { ...order, [field]: value } : order
+  ));
+};
 
   const getTotalHours = () => {
     return orders.reduce((total, order) => total + (parseFloat(order.hours) || 0), 0);
@@ -109,18 +109,18 @@ const TimeTrackingApp = () => {
     return workStartTime || '';
   };
 
-  const timeToMinutes = (timeStr) => {
-    if (!timeStr) return 0;
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
-  };
+ const timeToMinutes = (timeStr: string) => {
+  if (!timeStr) return 0;
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
+};
 
-  const minutesToTime = (totalMinutes) => {
-    const minutes = Math.round(totalMinutes);
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${String(hours % 24).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-  };
+  const minutesToTime = (totalMinutes: number) => {
+  const minutes = Math.round(totalMinutes);
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${String(hours % 24).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+};
 
   // Calculate end time with break considerations
   const endTime = React.useMemo(() => {
