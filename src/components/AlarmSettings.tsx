@@ -248,3 +248,15 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
             <h5 className="font-medium text-blue-800 mb-1">Wie funktionieren die Alarme?</h5>
             <ul className="text-blue-700 space-y-1">
               <li>• <strong>App geöffnet:</strong> Laute Alarme mit Ton und Vibration</li>
+              <li>• <strong>App geschlossen:</strong> Push-Benachrichtigungen vom Server</li>
+              <li>• <strong>Backup:</strong> Browser-Benachrichtigungen als Fallback</li>
+              <li>• <strong>Mobile:</strong> Vibration und Bildschirm-Aktivierung</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AlarmSettings;
