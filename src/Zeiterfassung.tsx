@@ -5,12 +5,6 @@ import AlarmDialog from './components/AlarmDialog';
 import AlarmSettings from './components/AlarmSettings';
 import { Order, Settings as SettingsType } from './types';
 
-interface Order {
-  id: number;
-  name: string;
-  hours: number;
-}
-
 const TimeTrackingApp = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [settings, setSettings] = useState<SettingsType>(() => {
