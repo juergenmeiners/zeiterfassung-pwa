@@ -1,3 +1,4 @@
+// src/types/index.ts
 export interface Order {
   id: number;
   name: string;
