@@ -32,7 +32,7 @@ async function initPush() {
     // Push-Subscription erstellen
     const subscription = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: "<DEIN_PUBLIC_VAPID_KEY>"
+      applicationServerKey: "BDZ3ycN4IBijw3P5O_z-udAKGo08Sf_AGPtkIc97rUVioDUzqBQVeSLf-MR6KfoIgyafJ6pysj60vzBfjgEfZws"
     });
 
     console.log("Push Subscription:", JSON.stringify(subscription));
