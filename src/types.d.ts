@@ -16,7 +16,3 @@ interface Window {
 interface NotificationOptions {
   vibrate?: number[];
 }
-
-declare namespace NodeJS {
-  interface Timeout {}
-}
