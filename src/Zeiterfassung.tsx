@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Settings, Clock, Bell } from 'lucide-react';
+import { useAlarmManager } from './hooks/useAlarmManager';
+import AlarmDialog from './components/AlarmDialog';
+import AlarmSettings from './components/AlarmSettings';
 
 const TimeTrackingApp = () => {
   const [orders, setOrders] = useState([]);
@@ -24,9 +27,25 @@ const TimeTrackingApp = () => {
   const [workStartTime, setWorkStartTime] = useState('');
   const [useCurrentTime, setUseCurrentTime] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAlarmSettings, setShowAlarmSettings] = useState(false);
   const [alarmEnabled, setAlarmEnabled] = useState(false);
   const [alarmTimeout, setAlarmTimeout] = useState(null);
   const [currentTime, setCurrentTime] = useState('');
+
+  // Use the professional alarm manager
+  const {
+    alarms,
+    activeAlarm,
+    setBreakAlarm,
+    setEndAlarm,
+    setMaxHoursWarning,
+    dismissAlarm,
+    snoozeAlarm,
+    testAlarm,
+    clearAlarm,
+    isAudioSupported,
+    isPushSupported
+  } = useAlarmManager();
 
   // Update current time
   useEffect(() => {
@@ -96,10 +115,7 @@ const TimeTrackingApp = () => {
     return `${String(hours % 24).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   };
 
-  // Remove the old calculateEndTime function completely
-  const calculateEndTime = null; // This ensures any old references fail
-
-  // Force recalculation with useMemo
+  // Calculate end time with break considerations
   const endTime = React.useMemo(() => {
     const totalHours = getTotalHours();
     const startTime = getEffectiveStartTime();
@@ -136,7 +152,7 @@ const TimeTrackingApp = () => {
   const totalHours = getTotalHours();
   const startTime = getEffectiveStartTime();
 
-  // Alarm system
+  // Legacy alarm system (keep for backward compatibility with existing users)
   useEffect(() => {
     if (alarmTimeout) {
       clearTimeout(alarmTimeout);
@@ -157,7 +173,7 @@ const TimeTrackingApp = () => {
 
         if (timeUntil > 0) {
           const timeout = setTimeout(() => {
-            triggerAlarm(endTime);
+            triggerLegacyAlarm(endTime);
           }, timeUntil);
           setAlarmTimeout(timeout);
         }
@@ -169,7 +185,7 @@ const TimeTrackingApp = () => {
     };
   }, [alarmEnabled, orders, useCurrentTime, workStartTime, settings, endTime]);
 
-  const triggerAlarm = (endTime) => {
+  const triggerLegacyAlarm = (endTime) => {
     // Visual alarm
     document.body.style.backgroundColor = '#FEE2E2';
     setTimeout(() => {
@@ -221,16 +237,48 @@ const TimeTrackingApp = () => {
               <Clock className="text-blue-600" size={32} />
               <h1 className="text-3xl font-bold text-gray-800">Zeiterfassung PWA</h1>
             </div>
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              <Settings size={20} />
-              Einstellungen
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowAlarmSettings(!showAlarmSettings)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  showAlarmSettings 
+                    ? 'bg-indigo-100 text-indigo-700' 
+                    : 'bg-gray-100 hover:bg-gray-200'
+                }`}
+              >
+                <Bell size={20} />
+                Alarme
+                {Object.keys(alarms).length > 0 && (
+                  <span className="bg-indigo-500 text-white text-xs px-2 py-0.5 rounded-full">
+                    {Object.keys(alarms).length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <Settings size={20} />
+                Einstellungen
+              </button>
+            </div>
           </div>
 
-          {/* Settings Panel - COMPLETELY REWRITTEN */}
+          {/* Professional Alarm Settings */}
+          {showAlarmSettings && (
+            <AlarmSettings
+              alarms={alarms}
+              onSetBreakAlarm={setBreakAlarm}
+              onSetEndAlarm={setEndAlarm}
+              onSetMaxHoursWarning={setMaxHoursWarning}
+              onTestAlarm={testAlarm}
+              onClearAlarm={clearAlarm}
+              isAudioSupported={isAudioSupported}
+              isPushSupported={isPushSupported}
+            />
+          )}
+
+          {/* Settings Panel */}
           {showSettings && (
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <h3 className="text-lg font-semibold mb-4">Einstellungen</h3>
@@ -282,13 +330,13 @@ const TimeTrackingApp = () => {
             </div>
           )}
 
-          {/* Alarm Section */}
+          {/* Legacy Alarm Section (for backward compatibility) */}
           <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   <Bell size={24} />
-                  Arbeitszeit-Alarm
+                  Einfacher Arbeitszeit-Alarm
                 </h3>
                 <p className="text-orange-700 mt-1">Benachrichtigung zur geplanten Endzeit</p>
               </div>
@@ -443,6 +491,13 @@ const TimeTrackingApp = () => {
           </div>
         </div>
       </div>
+
+      {/* Professional Alarm Dialog */}
+      <AlarmDialog 
+        alarm={activeAlarm}
+        onDismiss={dismissAlarm}
+        onSnooze={snoozeAlarm}
+      />
     </div>
   );
 };
