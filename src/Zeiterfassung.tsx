@@ -4,6 +4,12 @@ import { useAlarmManager } from './hooks/useAlarmManager';
 import AlarmDialog from './components/AlarmDialog';
 import AlarmSettings from './components/AlarmSettings';
 
+interface Order {
+  id: number;
+  name: string;
+  hours: number;
+}
+
 const TimeTrackingApp = () => {
   const [orders, setOrders] = useState([]);
   const [settings, setSettings] = useState(() => {
