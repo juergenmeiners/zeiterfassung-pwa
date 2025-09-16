@@ -11,10 +11,10 @@ interface AlarmState {
 interface AlarmDialogProps {
   alarm: AlarmState | null;
   onDismiss: () => void;
-  onSnooze: (minutes: number) => void;
+  onTimer: (minutes: number) => void;
 }
 
-const AlarmDialog: React.FC<AlarmDialogProps> = ({ alarm, onDismiss, onSnooze }) => {
+const AlarmDialog: React.FC<AlarmDialogProps> = ({ alarm, onDismiss, onTimer }) => {
   if (!alarm?.isActive) return null;
 
   const getAlarmIcon = () => {
@@ -79,18 +79,18 @@ const AlarmDialog: React.FC<AlarmDialogProps> = ({ alarm, onDismiss, onSnooze })
                 <>
                   <div className="flex gap-3">
                     <button
-                      onClick={() => onSnooze(5)}
+                      onClick={() => onTimer(5)}
                       className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
                     >
-                      <Snooze size={20} />
-                      Snooze 5 Min
+                      <Timer size={20} />
+                      Timer 5 Min
                     </button>
                     <button
-                      onClick={() => onSnooze(10)}
+                      onClick={() => onTimer(10)}
                       className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
                     >
-                      <Snooze size={20} />
-                      Snooze 10 Min
+                      <Timer size={20} />
+                      Timer 10 Min
                     </button>
                   </div>
                 </>
