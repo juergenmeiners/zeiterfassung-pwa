@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Clock, X, Snooze } from 'lucide-react';
+import { Bell, Clock, X, Timer } from 'lucide-react';
 
 interface AlarmState {
   isActive: boolean;
