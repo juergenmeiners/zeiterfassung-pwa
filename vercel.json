@@ -1,9 +1,12 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
   "functions": {
-    "api/*.js": {
+    "api/test-vapid.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/save-subscription.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/schedule-alarm.js": {
       "runtime": "nodejs18.x"
     }
   }
