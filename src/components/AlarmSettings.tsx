@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Bell, Clock, Coffee, Home, Volume2, Smartphone, TestTube, Settings, X } from 'lucide-react';
-import { AlarmConfig } from '../hooks/useAlarmManager';
+import { Bell, Clock, Coffee, Home, Volume2, Smartphone, TestTube, Settings, X, Plus, Edit, Trash2 } from 'lucide-react';
+import { AlarmConfig, CustomAlarm, WorkDay } from '../types';
 
 interface AlarmSettingsProps {
   alarms: AlarmConfig;
@@ -9,9 +9,23 @@ interface AlarmSettingsProps {
   onSetMaxHoursWarning: (hours: number) => void;
   onTestAlarm: () => void;
   onClearAlarm: (type: string) => void;
+  onAddCustomAlarm: (alarm: CustomAlarm) => void;
+  onUpdateCustomAlarm: (alarm: CustomAlarm) => void;
+  onDeleteCustomAlarm: (id: string) => void;
+  onUpdateWorkDays: (workDays: WorkDay[]) => void;
   isAudioSupported: boolean;
   isPushSupported: boolean;
 }
+
+const workDayLabels: Record<WorkDay, string> = {
+  monday: 'Mo',
+  tuesday: 'Di', 
+  wednesday: 'Mi',
+  thursday: 'Do',
+  friday: 'Fr',
+  saturday: 'Sa',
+  sunday: 'So'
+};
 
 const AlarmSettings: React.FC<AlarmSettingsProps> = ({
   alarms,
@@ -20,12 +34,80 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
   onSetMaxHoursWarning,
   onTestAlarm,
   onClearAlarm,
+  onAddCustomAlarm,
+  onUpdateCustomAlarm,
+  onDeleteCustomAlarm,
+  onUpdateWorkDays,
   isAudioSupported,
   isPushSupported
 }) => {
   const [breakTime, setBreakTime] = useState(alarms.breakReminder || '12:00');
   const [endTime, setEndTime] = useState(alarms.endReminder || '17:00');
   const [maxHours, setMaxHours] = useState(alarms.maxHoursWarning || 8);
+
+  // Custom Alarm Form State
+  const [showCustomAlarmForm, setShowCustomAlarmForm] = useState(false);
+  const [editingAlarm, setEditingAlarm] = useState<CustomAlarm | null>(null);
+  const [customAlarmForm, setCustomAlarmForm] = useState({
+    name: '',
+    time: '09:30',
+    message: '',
+    activeDays: [] as WorkDay[]
+  });
+
+  const handleCustomAlarmSubmit = () => {
+    if (!customAlarmForm.name || !customAlarmForm.time) {
+      alert('Bitte Name und Zeit ausfüllen');
+      return;
+    }
+
+    const newAlarm: CustomAlarm = {
+      id: editingAlarm?.id || `custom_${Date.now()}`,
+      name: customAlarmForm.name,
+      time: customAlarmForm.time,
+      message: customAlarmForm.message || `Zeit für ${customAlarmForm.name}!`,
+      activeDays: customAlarmForm.activeDays,
+      isActive: true
+    };
+
+    if (editingAlarm) {
+      onUpdateCustomAlarm(newAlarm);
+    } else {
+      onAddCustomAlarm(newAlarm);
+    }
+
+    // Reset form
+    setCustomAlarmForm({ name: '', time: '09:30', message: '', activeDays: [] });
+    setShowCustomAlarmForm(false);
+    setEditingAlarm(null);
+  };
+
+  const handleEditCustomAlarm = (alarm: CustomAlarm) => {
+    setEditingAlarm(alarm);
+    setCustomAlarmForm({
+      name: alarm.name,
+      time: alarm.time,
+      message: alarm.message,
+      activeDays: alarm.activeDays
+    });
+    setShowCustomAlarmForm(true);
+  };
+
+  const handleWorkDayToggle = (day: WorkDay) => {
+    const currentWorkDays = alarms.workDays || Object.keys(workDayLabels) as WorkDay[];
+    const newWorkDays = currentWorkDays.includes(day) 
+      ? currentWorkDays.filter(d => d !== day)
+      : [...currentWorkDays, day];
+    onUpdateWorkDays(newWorkDays);
+  };
+
+  const handleCustomAlarmDayToggle = (day: WorkDay) => {
+    const currentDays = customAlarmForm.activeDays;
+    const newDays = currentDays.includes(day)
+      ? currentDays.filter(d => d !== day)
+      : [...currentDays, day];
+    setCustomAlarmForm({ ...customAlarmForm, activeDays: newDays });
+  };
 
   return (
     <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 mb-6">
@@ -54,7 +136,44 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
         </div>
       </div>
 
-      {/* Alarm Controls Grid */}
+      {/* Work Days Selection */}
+      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm border">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="bg-blue-100 p-2 rounded-lg">
+            <Settings className="text-blue-600" size={16} />
+          </div>
+          <h4 className="font-medium text-gray-800">Arbeitstage</h4>
+        </div>
+        
+        <div className="flex gap-2 flex-wrap">
+          {Object.entries(workDayLabels).map(([day, label]) => {
+            const workDay = day as WorkDay;
+            const isActive = alarms.workDays?.includes(workDay) ?? true;
+            return (
+              <label key={day} className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={() => handleWorkDayToggle(workDay)}
+                  className="sr-only"
+                />
+                <div className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  isActive 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                }`}>
+                  {label}
+                </div>
+              </label>
+            );
+          })}
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Alarme werden nur an den ausgewählten Arbeitstagen ausgelöst
+        </p>
+      </div>
+
+      {/* Standard Alarm Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         
         {/* Break Reminder */}
@@ -150,6 +269,153 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
         </div>
       </div>
 
+      {/* Custom Alarms Section */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-100 p-2 rounded-lg">
+              <Coffee className="text-purple-600" size={20} />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800">Benutzerdefinierte Alarme</h3>
+          </div>
+          
+          <button
+            onClick={() => {
+              setShowCustomAlarmForm(!showCustomAlarmForm);
+              setEditingAlarm(null);
+              setCustomAlarmForm({ name: '', time: '09:30', message: '', activeDays: [] });
+            }}
+            className="flex items-center gap-2 px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors text-sm"
+          >
+            <Plus size={16} />
+            Neuer Alarm
+          </button>
+        </div>
+
+        {/* Custom Alarm Form */}
+        {showCustomAlarmForm && (
+          <div className="bg-purple-50 rounded-lg p-4 mb-4">
+            <h4 className="font-medium mb-3">
+              {editingAlarm ? 'Alarm bearbeiten' : 'Neuen Alarm erstellen'}
+            </h4>
+            
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  placeholder="z.B. Frühstückspause"
+                  value={customAlarmForm.name}
+                  onChange={(e) => setCustomAlarmForm({ ...customAlarmForm, name: e.target.value })}
+                  className="p-2 border rounded-lg"
+                />
+                <input
+                  type="time"
+                  value={customAlarmForm.time}
+                  onChange={(e) => setCustomAlarmForm({ ...customAlarmForm, time: e.target.value })}
+                  className="p-2 border rounded-lg"
+                />
+              </div>
+              
+              <input
+                type="text"
+                placeholder="Benutzerdefinierte Nachricht (optional)"
+                value={customAlarmForm.message}
+                onChange={(e) => setCustomAlarmForm({ ...customAlarmForm, message: e.target.value })}
+                className="w-full p-2 border rounded-lg"
+              />
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Aktive Tage:</label>
+                <div className="flex gap-2 flex-wrap">
+                  {Object.entries(workDayLabels).map(([day, label]) => {
+                    const workDay = day as WorkDay;
+                    const isActive = customAlarmForm.activeDays.includes(workDay);
+                    return (
+                      <label key={day} className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isActive}
+                          onChange={() => handleCustomAlarmDayToggle(workDay)}
+                          className="sr-only"
+                        />
+                        <div className={`px-2 py-1 rounded text-sm transition-colors ${
+                          isActive 
+                            ? 'bg-purple-500 text-white' 
+                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                        }`}>
+                          {label}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCustomAlarmSubmit}
+                  className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors"
+                >
+                  {editingAlarm ? 'Speichern' : 'Alarm erstellen'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCustomAlarmForm(false);
+                    setEditingAlarm(null);
+                    setCustomAlarmForm({ name: '', time: '09:30', message: '', activeDays: [] });
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Abbrechen
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Alarms List */}
+        {alarms.customAlarms && alarms.customAlarms.length > 0 && (
+          <div className="space-y-3">
+            {alarms.customAlarms.map((alarm) => (
+              <div key={alarm.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h5 className="font-medium">{alarm.name}</h5>
+                    <span className="text-sm text-gray-600">{alarm.time}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      alarm.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {alarm.isActive ? 'Aktiv' : 'Inaktiv'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {alarm.activeDays.length > 0 
+                      ? alarm.activeDays.map(day => workDayLabels[day]).join(', ')
+                      : 'Alle Tage'
+                    }
+                  </div>
+                </div>
+                
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => handleEditCustomAlarm(alarm)}
+                    className="p-2 text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => onDeleteCustomAlarm(alarm.id)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Additional Settings Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         
@@ -169,10 +435,11 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
               </label>
               <input
                 type="number"
-                min="1"
+                min="0"
+                step="0.25"
                 max="16"
                 value={maxHours}
-                onChange={(e) => setMaxHours(parseInt(e.target.value) || 8)}
+                onChange={(e) => setMaxHours(parseFloat(e.target.value) || 8)}
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
               />
             </div>
@@ -231,8 +498,10 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Service Worker:</span>
-              <span className="text-green-600 font-medium">✓</span>
+              <span className="text-gray-600">Custom Alarms:</span>
+              <span className="text-blue-600 font-medium">
+                {alarms.customAlarms?.length || 0}
+              </span>
             </div>
           </div>
         </div>
@@ -249,8 +518,8 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
             <ul className="text-blue-700 space-y-1">
               <li>• <strong>App geöffnet:</strong> Laute Alarme mit Ton und Vibration</li>
               <li>• <strong>App geschlossen:</strong> Push-Benachrichtigungen vom Server</li>
-              <li>• <strong>Backup:</strong> Browser-Benachrichtigungen als Fallback</li>
-              <li>• <strong>Mobile:</strong> Vibration und Bildschirm-Aktivierung</li>
+              <li>• <strong>Arbeitstage:</strong> Alarme werden nur an ausgewählten Tagen ausgelöst</li>
+              <li>• <strong>Custom Alarms:</strong> Frühstück, Snacks, Termine - komplett flexibel</li>
             </ul>
           </div>
         </div>
