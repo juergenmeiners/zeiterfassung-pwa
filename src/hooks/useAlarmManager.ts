@@ -280,7 +280,8 @@ const timeout = setTimeout(() => {
 }, timeUntilAlarm) as ReturnType<typeof setTimeout>;
 
 alarmTimeouts.current.set(type, timeout);
-
+ },
+  
   const testAlarm = useCallback(() => {
     triggerAlarm('TEST', 'Test Alarm! Das System funktioniert 🎉');
   }, [triggerAlarm]);
