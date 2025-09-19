@@ -436,7 +436,7 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
               <input
                 type="number"
                 min="0"
-                step="0.01"
+                step="0.25"
                 max="16"
                 value={maxHours}
                 onChange={(e) => setMaxHours(parseFloat(e.target.value) || 8)}
