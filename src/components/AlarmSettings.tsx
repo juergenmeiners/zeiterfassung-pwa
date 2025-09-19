@@ -1,23 +1,23 @@
 import React from 'react';
 import { Bell, TestTube } from 'lucide-react';
 
+// Anpassung an deine bestehende Struktur - die sollte bereits in Zeiterfassung.tsx definiert sein
 interface AlarmConfig {
-  breakAlarm: { time: string; enabled: boolean };
-  endAlarm: { time: string; enabled: boolean };
-  maxHoursWarning: { hours: number; enabled: boolean };
-  pushNotifications: boolean;
+  breakReminder?: string;
+  endReminder?: string;  
+  maxHoursWarning?: number;
+  overtimeWarning?: boolean;
+  pushNotifications?: boolean;
 }
 
 interface AlarmSettingsProps {
   alarms: AlarmConfig;
-  onSetBreakAlarm: (time: string) => void;
-  onSetEndAlarm: (time: string) => void;
-  onSetMaxHoursWarning: (hours: number) => void;
-  onTestAlarm: () => void;
-  onToggleBreakAlarm: (enabled: boolean) => void;
-  onToggleEndAlarm: (enabled: boolean) => void;
-  onToggleMaxHoursWarning: (enabled: boolean) => void;
+  onSetBreakReminder: (time?: string) => void;
+  onSetEndReminder: (time?: string) => void;
+  onSetMaxHoursWarning: (hours?: number) => void;
+  onToggleOvertimeWarning: (enabled: boolean) => void;
   onTogglePushNotifications: (enabled: boolean) => void;
+  onTestAlarm: () => void;
   subscriptionStatus: string;
   isPushSupported: boolean;
 }
