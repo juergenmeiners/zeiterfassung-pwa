@@ -20,7 +20,7 @@ export const useAlarmManager = () => {
   const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
   const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null);
   
-  const alarmTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const alarmTimeouts = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const isPlaying = useRef(false);
 
   // Initialize audio context
@@ -275,12 +275,11 @@ export const useAlarmManager = () => {
     
     const timeUntilAlarm = alarmTime.getTime() - now.getTime();
     
-    const timeout = setTimeout(() => {
-      triggerAlarm(type, message);
-    }, timeUntilAlarm);
-    
-    alarmTimeouts.current.set(type, timeout);
-  };
+const timeout = setTimeout(() => {
+  triggerAlarm(type, message);
+}, timeUntilAlarm) as ReturnType<typeof setTimeout>;
+
+alarmTimeouts.current.set(type, timeout);
 
   const testAlarm = useCallback(() => {
     triggerAlarm('TEST', 'Test Alarm! Das System funktioniert 🎉');
