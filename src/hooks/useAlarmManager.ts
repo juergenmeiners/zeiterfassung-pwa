@@ -318,3 +318,5 @@ alarmTimeouts.current.set(type, timeout);
     isPushSupported: !!pushSubscription
   };
 };
+
+  export type { AlarmConfig, AlarmState } from '../types';
