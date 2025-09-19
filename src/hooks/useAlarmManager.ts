@@ -278,11 +278,10 @@ export const useAlarmManager = () => {
 const timeout = setTimeout(() => {
   triggerAlarm(type, message);
 }, timeUntilAlarm) as ReturnType<typeof setTimeout>;
-
 alarmTimeouts.current.set(type, timeout);
- },
+}; // <- Schließende Klammer für die scheduleAlarmForTime Funktion
   
-  const testAlarm = useCallback(() => {
+const testAlarm = useCallback(() => {
     triggerAlarm('TEST', 'Test Alarm! Das System funktioniert 🎉');
   }, [triggerAlarm]);
 
