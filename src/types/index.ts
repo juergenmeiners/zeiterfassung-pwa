@@ -1,4 +1,3 @@
-// src/types/index.ts
 export interface Order {
   id: number;
   name: string;
@@ -22,9 +21,22 @@ export interface AlarmState {
   time: string;
 }
 
+export interface CustomAlarm {
+  id: string;
+  name: string;
+  time: string;
+  message: string;
+  activeDays: WorkDay[];
+  isActive: boolean;
+}
+
+export type WorkDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+
 export interface AlarmConfig {
   breakReminder?: string;
   endReminder?: string;
   maxHoursWarning?: number;
   overtimeWarning?: boolean;
+  customAlarms: CustomAlarm[];
+  workDays: WorkDay[];
 }
