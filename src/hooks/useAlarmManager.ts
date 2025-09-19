@@ -304,7 +304,7 @@ alarmTimeouts.current.set(type, timeout);
     };
   }, []);
 
-  return {
+return {
     alarms,
     activeAlarm,
     setBreakAlarm,
@@ -315,8 +315,8 @@ alarmTimeouts.current.set(type, timeout);
     testAlarm,
     clearAlarm,
     isAudioSupported: !!audioContext,
-    isPushSupported: !!pushSubscription
+    isPushSupported: !!pushSupported
   };
 };
 
-  export type { AlarmConfig, AlarmState } from '../types';
+export type { AlarmConfig, AlarmState } from '../types';
