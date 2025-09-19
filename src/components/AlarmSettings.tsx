@@ -1,36 +1,40 @@
 import React from 'react';
 import { Bell, TestTube } from 'lucide-react';
 
-interface AlarmSettings {
-  id: string;
-  time: string;
-  label: string;
-  enabled: boolean;
-  days: number[];
+interface AlarmConfig {
+  breakAlarm: { time: string; enabled: boolean };
+  endAlarm: { time: string; enabled: boolean };
+  maxHoursWarning: { hours: number; enabled: boolean };
+  pushNotifications: boolean;
 }
 
 interface AlarmSettingsProps {
-  alarmSettings: AlarmSettings[];
-  onToggleAlarm: (alarmId: string, enabled: boolean) => void;
+  alarms: AlarmConfig;
+  onSetBreakAlarm: (time: string) => void;
+  onSetEndAlarm: (time: string) => void;
+  onSetMaxHoursWarning: (hours: number) => void;
   onTestAlarm: () => void;
-  onUpdateAlarmTime: (alarmId: string, newTime: string) => void;
-  onUpdateAlarmDays: (alarmId: string, days: number[]) => void;
+  onToggleBreakAlarm: (enabled: boolean) => void;
+  onToggleEndAlarm: (enabled: boolean) => void;
+  onToggleMaxHoursWarning: (enabled: boolean) => void;
+  onTogglePushNotifications: (enabled: boolean) => void;
+  subscriptionStatus: string;
+  isPushSupported: boolean;
 }
 
 const AlarmSettings: React.FC<AlarmSettingsProps> = ({
-  alarmSettings,
-  onToggleAlarm,
+  alarms,
+  onSetBreakAlarm,
+  onSetEndAlarm,
+  onSetMaxHoursWarning,
   onTestAlarm,
-  onUpdateAlarmTime,
-  onUpdateAlarmDays
+  onToggleBreakAlarm,
+  onToggleEndAlarm,
+  onToggleMaxHoursWarning,
+  onTogglePushNotifications,
+  subscriptionStatus,
+  isPushSupported
 }) => {
-  const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-
-  const formatTime = (time: string) => {
-    if (!time) return '00:00';
-    return time;
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-4">
@@ -38,17 +42,138 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
         <h3 className="text-lg font-semibold text-gray-800">Alarm-Einstellungen</h3>
       </div>
 
-      {alarmSettings.map((alarm) => (
-        <div key={alarm.id} className="bg-white rounded-xl p-4 shadow-sm border">
+      {/* Pause Alarm */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-orange-100 p-2 rounded-lg">
+              <Bell className="text-orange-600" size={16} />
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-800">Pause-Erinnerung</h4>
+              <p className="text-sm text-gray-500">Erinnert dich an Pausen</p>
+            </div>
+          </div>
+          
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={alarms.breakAlarm.enabled}
+              onChange={(e) => onToggleBreakAlarm(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+          </label>
+        </div>
+
+        {alarms.breakAlarm.enabled && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Pause-Zeit
+            </label>
+            <input
+              type="time"
+              value={alarms.breakAlarm.time}
+              onChange={(e) => onSetBreakAlarm(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* End Alarm */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-red-100 p-2 rounded-lg">
+              <Bell className="text-red-600" size={16} />
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-800">Feierabend-Alarm</h4>
+              <p className="text-sm text-gray-500">Alarm zum Arbeitsende</p>
+            </div>
+          </div>
+          
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={alarms.endAlarm.enabled}
+              onChange={(e) => onToggleEndAlarm(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+          </label>
+        </div>
+
+        {alarms.endAlarm.enabled && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Feierabend-Zeit
+            </label>
+            <input
+              type="time"
+              value={alarms.endAlarm.time}
+              onChange={(e) => onSetEndAlarm(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Max Hours Warning */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-yellow-100 p-2 rounded-lg">
+              <Bell className="text-yellow-600" size={16} />
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-800">Überstunden-Warnung</h4>
+              <p className="text-sm text-gray-500">Warnt vor zu vielen Stunden</p>
+            </div>
+          </div>
+          
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={alarms.maxHoursWarning.enabled}
+              onChange={(e) => onToggleMaxHoursWarning(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
+          </label>
+        </div>
+
+        {alarms.maxHoursWarning.enabled && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Maximale Stunden pro Tag
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="24"
+              step="0.5"
+              value={alarms.maxHoursWarning.hours}
+              onChange={(e) => onSetMaxHoursWarning(parseFloat(e.target.value))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Push Notifications */}
+      {isPushSupported && (
+        <div className="bg-white rounded-xl p-4 shadow-sm border">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <Bell className="text-blue-600" size={16} />
+              <div className="bg-green-100 p-2 rounded-lg">
+                <Bell className="text-green-600" size={16} />
               </div>
               <div>
-                <h4 className="font-medium text-gray-800">{alarm.label}</h4>
+                <h4 className="font-medium text-gray-800">Push-Benachrichtigungen</h4>
                 <p className="text-sm text-gray-500">
-                  {formatTime(alarm.time)}
+                  Status: {subscriptionStatus}
                 </p>
               </div>
             </div>
@@ -56,57 +181,15 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={alarm.enabled}
-                onChange={(e) => onToggleAlarm(alarm.id, e.target.checked)}
+                checked={alarms.pushNotifications}
+                onChange={(e) => onTogglePushNotifications(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
             </label>
           </div>
-
-          {alarm.enabled && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Alarm-Zeit
-                </label>
-                <input
-                  type="time"
-                  value={alarm.time}
-                  onChange={(e) => onUpdateAlarmTime(alarm.id, e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Aktive Tage
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {dayNames.map((day, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        const newDays = alarm.days.includes(index)
-                          ? alarm.days.filter(d => d !== index)
-                          : [...alarm.days, index].sort();
-                        onUpdateAlarmDays(alarm.id, newDays);
-                      }}
-                      className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                        alarm.days.includes(index)
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-      ))}
+      )}
 
       {/* Test Alarm */}
       <div className="bg-white rounded-xl p-4 shadow-sm border mb-6">
