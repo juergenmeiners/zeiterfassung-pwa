@@ -34,20 +34,23 @@ const [alarmTimeout, setAlarmTimeout] = useState<ReturnType<typeof setTimeout> |
   const [currentTime, setCurrentTime] = useState('');
 
   // Use the professional alarm manager
-  const {
-    alarms,
-    activeAlarm,
-    setBreakAlarm,
-    setEndAlarm,
-    setMaxHoursWarning,
-    dismissAlarm,
-    snoozeAlarm,
-    testAlarm,
-    clearAlarm,
-    isAudioSupported,
-    isPushSupported
-  } = useAlarmManager();
-
+const {
+  alarms,
+  activeAlarm,
+  setBreakAlarm,
+  setEndAlarm,
+  setMaxHoursWarning,
+  addCustomAlarm,        // NEU
+  updateCustomAlarm,     // NEU
+  deleteCustomAlarm,     // NEU
+  updateWorkDays,        // NEU
+  dismissAlarm,
+  snoozeAlarm,
+  testAlarm,
+  clearAlarm,
+  isAudioSupported,
+  isPushSupported
+} = useAlarmManager();
   // Update current time
   useEffect(() => {
     const updateTime = () => {
@@ -268,19 +271,23 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
             </div>
           </div>
 
-          {/* Professional Alarm Settings */}
-          {showAlarmSettings && (
-            <AlarmSettings
-              alarms={alarms}
-              onSetBreakAlarm={setBreakAlarm}
-              onSetEndAlarm={setEndAlarm}
-              onSetMaxHoursWarning={setMaxHoursWarning}
-              onTestAlarm={testAlarm}
-              onClearAlarm={clearAlarm}
-              isAudioSupported={isAudioSupported}
-              isPushSupported={isPushSupported}
-            />
-          )}
+         {/* Professional Alarm Settings */}
+{showAlarmSettings && (
+  <AlarmSettings
+    alarms={alarms}
+    onSetBreakAlarm={setBreakAlarm}
+    onSetEndAlarm={setEndAlarm}
+    onSetMaxHoursWarning={setMaxHoursWarning}
+    onTestAlarm={testAlarm}
+    onClearAlarm={clearAlarm}
+    onAddCustomAlarm={addCustomAlarm}           // NEU
+    onUpdateCustomAlarm={updateCustomAlarm}     // NEU
+    onDeleteCustomAlarm={deleteCustomAlarm}     // NEU
+    onUpdateWorkDays={updateWorkDays}           // NEU
+    isAudioSupported={isAudioSupported}
+    isPushSupported={isPushSupported}
+  />
+)}
 
           {/* Settings Panel */}
           {showSettings && (
