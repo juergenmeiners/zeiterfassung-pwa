@@ -19,5 +19,8 @@ interface NotificationOptions {
 }
 
 declare namespace NodeJS {
-  interface Timeout extends number {}
+  interface Timeout extends Timer {}
 }
+
+declare var setTimeout: (callback: (...args: any[]) => void, ms?: number, ...args: any[]) => NodeJS.Timeout;
+declare var clearTimeout: (timeoutId: NodeJS.Timeout) => void;
