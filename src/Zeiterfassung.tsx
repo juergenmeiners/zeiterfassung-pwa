@@ -88,13 +88,16 @@ const [alarmTimeout, setAlarmTimeout] = useState<ReturnType<typeof setTimeout> |
 
 const updateOrder = (id: number, field: keyof Order, value: string | number) => {
   setOrders(orders.map(order => 
-    order.id === id ? { ...order, [field]: value } : order
+    order.id === id ? { 
+      ...order, 
+      [field]: field === 'hours' ? Number(value) || 0 : value 
+    } : order
   ));
 };
   
-  const getTotalHours = () => {
-    return orders.reduce((total, order) => total + (parseFloat(order.hours) || 0), 0);
-  };
+ const getTotalHours = () => {
+  return orders.reduce((total, order) => total + (order.hours || 0), 0);
+};
 
   const getEffectiveStartTime = () => {
     if (useCurrentTime) {
