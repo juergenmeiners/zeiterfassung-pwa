@@ -317,6 +317,6 @@ return {
     isAudioSupported: !!audioContext,
     isPushSupported: !!pushSupported
   };
-};
+}; // <- Diese Zeile schließt die useAlarmManager Funktion
 
 export type { AlarmConfig, AlarmState } from '../types';
