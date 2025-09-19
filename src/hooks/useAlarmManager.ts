@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { AlarmConfig, AlarmState } from '../types';
+import { AlarmConfig, AlarmState, CustomAlarm, WorkDay } from '../types';
 
 interface PushSubscription {
   endpoint: string;
@@ -12,7 +12,10 @@ interface PushSubscription {
 export const useAlarmManager = () => {
   const [alarms, setAlarms] = useState<AlarmConfig>(() => {
     const saved = localStorage.getItem('zeiterfassung-alarms');
-    return saved ? JSON.parse(saved) : {};
+    return saved ? JSON.parse(saved) : {
+      customAlarms: [],
+      workDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as WorkDay[]
+    };
   });
   
   const [activeAlarm, setActiveAlarm] = useState<AlarmState | null>(null);
@@ -46,6 +49,34 @@ export const useAlarmManager = () => {
     initializePushNotifications();
   }, []);
 
+  // Check if today is a work day
+  const isWorkDay = useCallback(() => {
+    const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const workDayNumbers: Record<WorkDay, number> = {
+      'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3, 
+      'thursday': 4, 'friday': 5, 'saturday': 6
+    };
+    
+    const currentWorkDays = alarms.workDays || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as WorkDay[];
+    return currentWorkDays.some(day => workDayNumbers[day] === today);
+  }, [alarms.workDays]);
+
+  // Check if specific custom alarm should trigger today
+  const shouldCustomAlarmTrigger = useCallback((alarm: CustomAlarm) => {
+    if (!alarm.isActive) return false;
+    
+    const today = new Date().getDay();
+    const workDayNumbers: Record<WorkDay, number> = {
+      'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3, 
+      'thursday': 4, 'friday': 5, 'saturday': 6
+    };
+    
+    // If no specific days set, use work days
+    const activeDays = alarm.activeDays.length > 0 ? alarm.activeDays : (alarms.workDays || []);
+    
+    return activeDays.some(day => workDayNumbers[day] === today);
+  }, [alarms.workDays]);
+
   const initializePushNotifications = async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       console.warn('Push notifications not supported');
@@ -62,8 +93,8 @@ export const useAlarmManager = () => {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') return;
 
-        // VAPID public key - replace with your actual key
-        const vapidPublicKey = 'BEl62iUYgUivxIkv69yViQFAKRd7X8A9e_qJ3R1wSvKrt1WQXJaeCX8xZ1l3i9aF_qKlV7QX6RsN4JQhNQ2L6V';
+        // VAPID public key
+        const vapidPublicKey = 'BDZ3ycN4IBijw3P5O_z-udAKGo08Sf_AGPtkIc97rUVioDUzqBQVeSLf-MR6KfoIgyafJ6pysj60vzBfjgEfZws';
         
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
@@ -73,7 +104,6 @@ export const useAlarmManager = () => {
 
       if (subscription) {
         setPushSubscription(subscription as any);
-        // Send subscription to server
         await sendSubscriptionToServer(subscription);
       }
     } catch (error) {
@@ -184,7 +214,6 @@ export const useAlarmManager = () => {
       minute: '2-digit' 
     });
 
-    // Set active alarm state
     setActiveAlarm({
       isActive: true,
       type,
@@ -192,24 +221,20 @@ export const useAlarmManager = () => {
       time: currentTime
     });
 
-    // Play sound if page is visible
     if (document.visibilityState === 'visible') {
       playAlarmSound();
       requestWakeLock();
     }
 
-    // Show browser notification
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('Zeiterfassung Alarm', {
         body: message,
         icon: '/icon-192.png',
-        vibrate: [300, 100, 300, 100, 300],
         requireInteraction: true,
         tag: 'zeiterfassung-alarm'
       });
     }
 
-    // Vibrate if available
     if (navigator.vibrate) {
       navigator.vibrate([500, 200, 500, 200, 500]);
     }
@@ -233,20 +258,47 @@ export const useAlarmManager = () => {
     }, minutes * 60 * 1000);
   }, [dismissAlarm, triggerAlarm]);
 
+  const scheduleAlarmForTime = (type: string, time: string, message: string) => {
+    const now = new Date();
+    const [hours, minutes] = time.split(':').map(Number);
+    const alarmTime = new Date();
+    alarmTime.setHours(hours, minutes, 0, 0);
+    
+    if (alarmTime <= now) {
+      alarmTime.setDate(alarmTime.getDate() + 1);
+    }
+    
+    const timeUntilAlarm = alarmTime.getTime() - now.getTime();
+    
+    const timeout = setTimeout(() => {
+      triggerAlarm(type, message);
+    }, timeUntilAlarm) as ReturnType<typeof setTimeout>;
+
+    alarmTimeouts.current.set(type, timeout);
+  };
+
   const setBreakAlarm = useCallback((time: string) => {
+    if (!isWorkDay()) {
+      console.log('Kein Arbeitstag - Pausenalarm wird nicht gesetzt');
+      return;
+    }
+
     const newAlarms = { ...alarms, breakReminder: time };
     setAlarms(newAlarms);
     
-    // Clear existing timeout
     const existingTimeout = alarmTimeouts.current.get('break');
     if (existingTimeout) clearTimeout(existingTimeout);
     
-    // Schedule new alarm
     scheduleAlarmForTime('break', time, 'Zeit für eine Pause! ☕');
     scheduleServerAlarm('break', time, 'Zeit für eine Pause! ☕');
-  }, [alarms]);
+  }, [alarms, isWorkDay]);
 
   const setEndAlarm = useCallback((time: string) => {
+    if (!isWorkDay()) {
+      console.log('Kein Arbeitstag - Feierabend-Alarm wird nicht gesetzt');
+      return;
+    }
+
     const newAlarms = { ...alarms, endReminder: time };
     setAlarms(newAlarms);
     
@@ -255,33 +307,99 @@ export const useAlarmManager = () => {
     
     scheduleAlarmForTime('end', time, 'Feierabend! Vergiss nicht auszustempeln 🏠');
     scheduleServerAlarm('end', time, 'Feierabend! Vergiss nicht auszustempeln 🏠');
-  }, [alarms]);
+  }, [alarms, isWorkDay]);
 
   const setMaxHoursWarning = useCallback((hours: number) => {
     const newAlarms = { ...alarms, maxHoursWarning: hours };
     setAlarms(newAlarms);
   }, [alarms]);
 
-  const scheduleAlarmForTime = (type: string, time: string, message: string) => {
-    const now = new Date();
-    const [hours, minutes] = time.split(':').map(Number);
-    const alarmTime = new Date();
-    alarmTime.setHours(hours, minutes, 0, 0);
+  const addCustomAlarm = useCallback((alarm: CustomAlarm) => {
+    const newAlarms = { 
+      ...alarms, 
+      customAlarms: [...(alarms.customAlarms || []), alarm] 
+    };
+    setAlarms(newAlarms);
     
-    // If time has passed today, schedule for tomorrow
-    if (alarmTime <= now) {
-      alarmTime.setDate(alarmTime.getDate() + 1);
+    // Schedule the custom alarm if it should trigger today
+    if (shouldCustomAlarmTrigger(alarm)) {
+      scheduleAlarmForTime(alarm.id, alarm.time, alarm.message);
+      scheduleServerAlarm(alarm.id, alarm.time, alarm.message);
+    }
+  }, [alarms, shouldCustomAlarmTrigger]);
+
+  const updateCustomAlarm = useCallback((updatedAlarm: CustomAlarm) => {
+    const newAlarms = { 
+      ...alarms, 
+      customAlarms: (alarms.customAlarms || []).map(alarm => 
+        alarm.id === updatedAlarm.id ? updatedAlarm : alarm
+      ) 
+    };
+    setAlarms(newAlarms);
+    
+    // Clear existing timeout
+    const existingTimeout = alarmTimeouts.current.get(updatedAlarm.id);
+    if (existingTimeout) clearTimeout(existingTimeout);
+    
+    // Reschedule if active and should trigger today
+    if (shouldCustomAlarmTrigger(updatedAlarm)) {
+      scheduleAlarmForTime(updatedAlarm.id, updatedAlarm.time, updatedAlarm.message);
+      scheduleServerAlarm(updatedAlarm.id, updatedAlarm.time, updatedAlarm.message);
+    }
+  }, [alarms, shouldCustomAlarmTrigger]);
+
+  const deleteCustomAlarm = useCallback((alarmId: string) => {
+    const newAlarms = { 
+      ...alarms, 
+      customAlarms: (alarms.customAlarms || []).filter(alarm => alarm.id !== alarmId) 
+    };
+    setAlarms(newAlarms);
+    
+    // Clear timeout
+    const existingTimeout = alarmTimeouts.current.get(alarmId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+      alarmTimeouts.current.delete(alarmId);
+    }
+  }, [alarms]);
+
+  const updateWorkDays = useCallback((workDays: WorkDay[]) => {
+    const newAlarms = { ...alarms, workDays };
+    setAlarms(newAlarms);
+    
+    // Reschedule all alarms based on new work days
+    rescheduleAllAlarms();
+  }, [alarms]);
+
+  const rescheduleAllAlarms = useCallback(() => {
+    // Clear all existing timeouts
+    alarmTimeouts.current.forEach(timeout => clearTimeout(timeout));
+    alarmTimeouts.current.clear();
+    
+    // Reschedule standard alarms if today is a work day
+    if (isWorkDay()) {
+      if (alarms.breakReminder) {
+        scheduleAlarmForTime('break', alarms.breakReminder, 'Zeit für eine Pause! ☕');
+      }
+      if (alarms.endReminder) {
+        scheduleAlarmForTime('end', alarms.endReminder, 'Feierabend! Vergiss nicht auszustempeln 🏠');
+      }
     }
     
-    const timeUntilAlarm = alarmTime.getTime() - now.getTime();
-    
-const timeout = setTimeout(() => {
-  triggerAlarm(type, message);
-}, timeUntilAlarm) as ReturnType<typeof setTimeout>;
-alarmTimeouts.current.set(type, timeout);
-}; // <- Schließende Klammer für die scheduleAlarmForTime Funktion
-  
-const testAlarm = useCallback(() => {
+    // Reschedule custom alarms
+    (alarms.customAlarms || []).forEach(alarm => {
+      if (shouldCustomAlarmTrigger(alarm)) {
+        scheduleAlarmForTime(alarm.id, alarm.time, alarm.message);
+      }
+    });
+  }, [alarms, isWorkDay, shouldCustomAlarmTrigger]);
+
+  // Reschedule alarms when work days or custom alarms change
+  useEffect(() => {
+    rescheduleAllAlarms();
+  }, [alarms.workDays, alarms.customAlarms]);
+
+  const testAlarm = useCallback(() => {
     triggerAlarm('TEST', 'Test Alarm! Das System funktioniert 🎉');
   }, [triggerAlarm]);
 
@@ -304,12 +422,16 @@ const testAlarm = useCallback(() => {
     };
   }, []);
 
-return {
+  return {
     alarms,
     activeAlarm,
     setBreakAlarm,
     setEndAlarm,
     setMaxHoursWarning,
+    addCustomAlarm,
+    updateCustomAlarm,
+    deleteCustomAlarm,
+    updateWorkDays,
     dismissAlarm,
     snoozeAlarm,
     testAlarm,
@@ -317,6 +439,6 @@ return {
     isAudioSupported: !!audioContext,
     isPushSupported: !!pushSubscription
   };
-}; // <- Diese Zeile schließt die useAlarmManager Funktion
+};
 
 export type { AlarmConfig, AlarmState } from '../types';
