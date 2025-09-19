@@ -446,14 +446,15 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
                         />
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <input
-                          type="number"
-                          step="0.25"
-                          placeholder="0.00"
-                          value={order.hours || ''}
-                          onChange={(e) => updateOrder(order.id, 'hours', e.target.value)}
-                          className="w-24 p-2 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                       <input
+  type="number"
+  step="0.01"
+  min="0"
+  placeholder="0.00"
+  value={order.hours || ''}
+  onChange={(e) => updateOrder(order.id, 'hours', e.target.value)}
+  className="w-24 p-2 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+/>
                         <span className="ml-1 text-sm text-gray-500">h</span>
                       </td>
                       <td className="px-4 py-3 text-center">
