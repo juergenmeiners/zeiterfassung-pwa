@@ -316,7 +316,7 @@ return {
     testAlarm,
     clearAlarm,
     isAudioSupported: !!audioContext,
-    isPushSupported: !!pushSupported
+    isPushSupported: !!pushSubscription
   };
 }; // <- Diese Zeile schließt die useAlarmManager Funktion
 
