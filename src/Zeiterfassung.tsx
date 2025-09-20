@@ -115,12 +115,20 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
   return hours * 60 + minutes;
 };
 
+  // KORRIGIERT: Präzise Rundung für minutesToTime
   const minutesToTime = (totalMinutes: number) => {
-  const minutes = Math.round(totalMinutes);
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${String(hours % 24).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-};
+    const minutes = Math.round(totalMinutes);
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours % 24).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  };
+
+  // KORRIGIERT: Präzise Stunden-zu-Minuten Konvertierung
+  const hoursToMinutes = (hours: number) => {
+    // Runde auf 2 Dezimalstellen und dann erst umrechnen
+    const preciseHours = Math.round(hours * 100) / 100;
+    return Math.round(preciseHours * 60);
+  };
 
   // Calculate end time with break considerations
   const endTime = React.useMemo(() => {
@@ -130,7 +138,8 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
     if (!startTime || totalHours <= 0) return '--:--';
     
     const startMinutes = timeToMinutes(startTime);
-    const workMinutes = totalHours / settings.timeGrade * 60;
+    // KORRIGIERT: Verwende präzise Konvertierung
+    const workMinutes = hoursToMinutes(totalHours / settings.timeGrade);
     let endMinutes = startMinutes + workMinutes;
     
     // Add breaks that fall within working hours and adjust end time
