@@ -15,7 +15,7 @@ interface AlarmSettingsProps {
   onClearAlarm: (type: string) => void;
   onTestAlarm: () => void;
   onAddCustomAlarm: (alarm: any) => void;
-  onUpdateCustomAlarm: (id: string, alarm: any) => void;
+  onUpdateCustomAlarm: (updatedAlarm: any) => void;
   onDeleteCustomAlarm: (id: string) => void;
   subscriptionStatus: string;
   isPushSupported: boolean;
