@@ -20,6 +20,7 @@ interface AlarmSettingsProps {
   onUpdateWorkDays: (days: any) => void;
   subscriptionStatus: string;
   isPushSupported: boolean;
+  isAudioSupported: boolean;
 }
 
 const AlarmSettings: React.FC<AlarmSettingsProps> = ({
