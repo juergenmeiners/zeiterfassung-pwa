@@ -93,10 +93,15 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
   setOrders(orders.map(order => {
     if (order.id === id) {
       if (field === 'hours') {
-        // Behandle sowohl Komma als auch Punkt als Dezimaltrennzeichen
-        const stringValue = String(value).replace(',', '.');
-        const numericValue = stringValue === '' ? 0 : parseFloat(stringValue);
-        return { ...order, [field]: isNaN(numericValue) ? 0 : numericValue };
+        // Direkte String-Behandlung ohne Konvertierung
+        if (value === '' || value === null || value === undefined) {
+          return { ...order, [field]: 0 };
+        }
+        // Konvertiere String zu Number, aber behalte auch sehr kleine Werte
+        const numValue = typeof value === 'string' ? 
+          parseFloat(value.replace(',', '.')) : 
+          Number(value);
+        return { ...order, [field]: isNaN(numValue) ? 0 : numValue };
       }
       return { ...order, [field]: value };
     }
@@ -461,26 +466,28 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
                         />
                       </td>
                       <td className="px-4 py-3 text-center">
-                       <input
-  type="number"
-  step="0.01"
-  min="0"
-  placeholder="0.00"
-  value={order.hours === 0 ? '' : order.hours}
-  onChange={(e) => {
-    // Behandle sowohl Komma als auch Punkt als Dezimaltrennzeichen
-    const value = e.target.value.replace(',', '.');
-    updateOrder(order.id, 'hours', value);
-  }}
-  onBlur={(e) => {
-    // Beim Verlassen des Feldes formatieren
-    if (e.target.value && !isNaN(parseFloat(e.target.value))) {
-      const formatted = parseFloat(e.target.value).toFixed(2);
-      updateOrder(order.id, 'hours', formatted);
-    }
-  }}
-  className="w-24 p-2 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-/>
+                        <input
+                          type="text"
+                          placeholder="0.00"
+                          value={order.hours === 0 ? '' : order.hours.toString()}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Erlaube nur Zahlen, Punkt und Komma
+                            if (value === '' || /^[0-9]*[.,]?[0-9]*$/.test(value)) {
+                              updateOrder(order.id, 'hours', value);
+                            }
+                          }}
+                          onBlur={(e) => {
+                            // Beim Verlassen formatieren und validieren
+                            const value = e.target.value.replace(',', '.');
+                            if (value && !isNaN(parseFloat(value))) {
+                              updateOrder(order.id, 'hours', parseFloat(value));
+                            } else if (value === '') {
+                              updateOrder(order.id, 'hours', 0);
+                            }
+                          }}
+                          className="w-24 p-2 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
                         <span className="ml-1 text-sm text-gray-500">h</span>
                       </td>
                       <td className="px-4 py-3 text-center">
