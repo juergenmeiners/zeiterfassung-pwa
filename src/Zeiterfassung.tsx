@@ -7,6 +7,7 @@ import { Order, Settings as SettingsType } from './types';
 
 const TimeTrackingApp = () => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [inputValues, setInputValues] = useState<{ [key: number]: string }>({});
   const [settings, setSettings] = useState<SettingsType>(() => {
     // Load settings from localStorage or use defaults
     const savedSettings = localStorage.getItem('zeiterfassung-settings');
@@ -83,40 +84,37 @@ const {
       hours: 0
     };
     setOrders([...orders, newOrder]);
+    setInputValues(prev => ({ ...prev, [newOrder.id]: '' }));
   };
 
   const removeOrder = (id: number) => {
-  setOrders(orders.filter(order => order.id !== id));
-};
+    setOrders(orders.filter(order => order.id !== id));
+    setInputValues(prev => {
+      const newValues = { ...prev };
+      delete newValues[id];
+      return newValues;
+    });
+  };
 
 const updateOrder = (id: number, field: keyof Order, value: string | number) => {
-  console.log('updateOrder called:', { id, field, value, type: typeof value });
-  
-  setOrders(orders.map(order => {
-    if (order.id === id) {
-      if (field === 'hours') {
-        // Immer als Number speichern, aber während der Eingabe String erlauben
-        if (typeof value === 'string') {
-          if (value === '') {
-            const result = { ...order, [field]: 0 };
-            console.log('Empty string result:', result);
-            return result;
-          }
-          // Versuche String zu Number zu konvertieren
-          const numValue = parseFloat(value.replace(',', '.'));
-          const result = { ...order, [field]: isNaN(numValue) ? 0 : numValue };
-          console.log('String conversion result:', result);
-          return result;
-        }
-        // Numerische Werte direkt übernehmen
-        const result = { ...order, [field]: Number(value) };
-        console.log('Number input result:', result);
-        return result;
-      }
-      return { ...order, [field]: value };
+  if (field === 'hours') {
+    // Für Stunden: Speichere Input separat
+    const stringValue = String(value);
+    setInputValues(prev => ({ ...prev, [id]: stringValue }));
+    
+    // Konvertiere zu Number für State
+    const numValue = stringValue === '' ? 0 : parseFloat(stringValue.replace(',', '.'));
+    if (!isNaN(numValue)) {
+      setOrders(orders.map(order => 
+        order.id === id ? { ...order, [field]: numValue } : order
+      ));
     }
-    return order;
-  }));
+  } else {
+    // Für andere Felder normal behandeln
+    setOrders(orders.map(order => 
+      order.id === id ? { ...order, [field]: value } : order
+    ));
+  }
 };
   
  const getTotalHours = () => {
@@ -476,45 +474,23 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
                         />
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <div className="space-y-1">
-                          <input
-                            type="text"
-                            placeholder="0.00"
-                            value={order.hours === 0 ? '' : String(order.hours)}
-                            onChange={(e) => {
-                              console.log('Input onChange:', e.target.value);
-                              const rawValue = e.target.value;
-                              
-                              // Erlaube leeren String
-                              if (rawValue === '') {
-                                updateOrder(order.id, 'hours', '');
-                                return;
-                              }
-                              
-                              // Erlaube nur gültige Zahlen-Eingaben
-                              if (/^[0-9]*[.,]?[0-9]*$/.test(rawValue)) {
-                                // Speichere als String während der Eingabe
-                                updateOrder(order.id, 'hours', rawValue);
-                              }
-                            }}
-                            onBlur={(e) => {
-                              console.log('Input onBlur:', e.target.value);
-                              const value = e.target.value.replace(',', '.');
-                              if (value === '') {
-                                updateOrder(order.id, 'hours', 0);
-                              } else if (!isNaN(parseFloat(value))) {
-                                const numValue = parseFloat(value);
-                                console.log('Parsed value:', numValue);
-                                updateOrder(order.id, 'hours', numValue);
-                              }
-                            }}
-                            className="w-24 p-2 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          <div className="text-xs text-gray-400">
-                            Wert: {JSON.stringify(order.hours)}
-                          </div>
-                        </div>
+                        <input
+                          type="text"
+                          placeholder="0.00"
+                          value={inputValues[order.id] ?? (order.hours === 0 ? '' : order.hours.toString())}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Akzeptiere alle numerischen Eingaben
+                            if (value === '' || /^[0-9]*[.,]?[0-9]*$/.test(value)) {
+                              updateOrder(order.id, 'hours', value);
+                            }
+                          }}
+                          className="w-24 p-2 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
                         <span className="ml-1 text-sm text-gray-500">h</span>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Debug: {order.hours}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <button
