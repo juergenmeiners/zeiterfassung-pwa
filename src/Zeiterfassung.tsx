@@ -93,7 +93,7 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
   setOrders(orders.map(order => 
     order.id === id ? { 
       ...order, 
-      [field]: field === 'hours' ? Number(value) || 0 : value 
+      [field]: field === 'hours' ? (value === '' ? 0 : parseFloat(String(value))) : value 
     } : order
   ));
 };
