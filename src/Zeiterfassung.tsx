@@ -90,18 +90,21 @@ const {
 };
 
 const updateOrder = (id: number, field: keyof Order, value: string | number) => {
+  console.log('updateOrder called:', { id, field, value, type: typeof value });
+  
   setOrders(orders.map(order => {
     if (order.id === id) {
       if (field === 'hours') {
-        // Direkte String-Behandlung ohne Konvertierung
-        if (value === '' || value === null || value === undefined) {
-          return { ...order, [field]: 0 };
+        // Während der Eingabe als String belassen
+        if (typeof value === 'string') {
+          const result = { ...order, [field]: value === '' ? 0 : value };
+          console.log('String input result:', result);
+          return result;
         }
-        // Konvertiere String zu Number, aber behalte auch sehr kleine Werte
-        const numValue = typeof value === 'string' ? 
-          parseFloat(value.replace(',', '.')) : 
-          Number(value);
-        return { ...order, [field]: isNaN(numValue) ? 0 : numValue };
+        // Numerische Werte direkt übernehmen
+        const result = { ...order, [field]: Number(value) };
+        console.log('Number input result:', result);
+        return result;
       }
       return { ...order, [field]: value };
     }
@@ -466,28 +469,44 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
                         />
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <input
-                          type="text"
-                          placeholder="0.00"
-                          value={order.hours === 0 ? '' : order.hours.toString()}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            // Erlaube nur Zahlen, Punkt und Komma
-                            if (value === '' || /^[0-9]*[.,]?[0-9]*$/.test(value)) {
-                              updateOrder(order.id, 'hours', value);
-                            }
-                          }}
-                          onBlur={(e) => {
-                            // Beim Verlassen formatieren und validieren
-                            const value = e.target.value.replace(',', '.');
-                            if (value && !isNaN(parseFloat(value))) {
-                              updateOrder(order.id, 'hours', parseFloat(value));
-                            } else if (value === '') {
-                              updateOrder(order.id, 'hours', 0);
-                            }
-                          }}
-                          className="w-24 p-2 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                        <div className="space-y-1">
+                          <input
+                            type="text"
+                            placeholder="0.00"
+                            value={order.hours === 0 ? '' : String(order.hours)}
+                            onChange={(e) => {
+                              console.log('Input onChange:', e.target.value);
+                              const rawValue = e.target.value;
+                              
+                              // Erlaube leeren String
+                              if (rawValue === '') {
+                                updateOrder(order.id, 'hours', '');
+                                return;
+                              }
+                              
+                              // Erlaube nur gültige Zahlen-Eingaben
+                              if (/^[0-9]*[.,]?[0-9]*$/.test(rawValue)) {
+                                // Speichere als String während der Eingabe
+                                updateOrder(order.id, 'hours', rawValue);
+                              }
+                            }}
+                            onBlur={(e) => {
+                              console.log('Input onBlur:', e.target.value);
+                              const value = e.target.value.replace(',', '.');
+                              if (value === '') {
+                                updateOrder(order.id, 'hours', 0);
+                              } else if (!isNaN(parseFloat(value))) {
+                                const numValue = parseFloat(value);
+                                console.log('Parsed value:', numValue);
+                                updateOrder(order.id, 'hours', numValue);
+                              }
+                            }}
+                            className="w-24 p-2 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <div className="text-xs text-gray-400">
+                            Wert: {JSON.stringify(order.hours)}
+                          </div>
+                        </div>
                         <span className="ml-1 text-sm text-gray-500">h</span>
                       </td>
                       <td className="px-4 py-3 text-center">
