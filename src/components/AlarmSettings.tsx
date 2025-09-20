@@ -17,6 +17,7 @@ interface AlarmSettingsProps {
   onAddCustomAlarm: (alarm: any) => void;
   onUpdateCustomAlarm: (updatedAlarm: any) => void;
   onDeleteCustomAlarm: (id: string) => void;
+  onUpdateWorkDays: (days: any) => void;
   subscriptionStatus: string;
   isPushSupported: boolean;
 }
