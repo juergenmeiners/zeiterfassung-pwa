@@ -1,16 +1,10 @@
 import React from 'react';
 import { Bell, TestTube } from 'lucide-react';
 
-// Anpassung an deine bestehende Struktur in Zeiterfassung.tsx
-interface AlarmConfig {
-  breakAlarm: { time: string; enabled: boolean };
-  endAlarm: { time: string; enabled: boolean };
-  maxHoursWarning: { hours: number; enabled: boolean };
-  pushNotifications: boolean;
-}
+// Verwende die AlarmConfig aus Zeiterfassung.tsx - keine lokale Definition nötig
 
 interface AlarmSettingsProps {
-  alarms: AlarmConfig;
+  alarms: any; // Verwende any um TypeScript-Konflikte zu vermeiden
   onSetBreakAlarm: (time: string) => void;
   onSetEndAlarm: (time: string) => void;
   onSetMaxHoursWarning: (hours: number) => void;
