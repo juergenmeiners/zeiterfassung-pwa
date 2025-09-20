@@ -8,17 +8,17 @@ interface AlarmSettingsProps {
   onSetBreakAlarm: (time: string) => void;
   onSetEndAlarm: (time: string) => void;
   onSetMaxHoursWarning: (hours: number) => void;
-  onToggleBreakAlarm: (enabled: boolean) => void;
-  onToggleEndAlarm: (enabled: boolean) => void;
-  onToggleMaxHoursWarning: (enabled: boolean) => void;
-  onTogglePushNotifications: (enabled: boolean) => void;
+  onToggleBreakAlarm?: (enabled: boolean) => void;
+  onToggleEndAlarm?: (enabled: boolean) => void;
+  onToggleMaxHoursWarning?: (enabled: boolean) => void;
+  onTogglePushNotifications?: (enabled: boolean) => void;
   onClearAlarm: (type: string) => void;
   onTestAlarm: () => void;
   onAddCustomAlarm: (alarm: any) => void;
   onUpdateCustomAlarm: (updatedAlarm: any) => void;
   onDeleteCustomAlarm: (id: string) => void;
   onUpdateWorkDays: (days: any) => void;
-  subscriptionStatus: string;
+  subscriptionStatus?: string;
   isPushSupported: boolean;
   isAudioSupported: boolean;
 }
@@ -59,22 +59,22 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={alarms.breakAlarm.enabled}
-              onChange={(e) => onToggleBreakAlarm(e.target.checked)}
+              checked={alarms.breakAlarm?.enabled || false}
+              onChange={(e) => onToggleBreakAlarm?.(e.target.checked)}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
           </label>
         </div>
 
-        {alarms.breakAlarm.enabled && (
+                  {alarms.breakAlarm?.enabled && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Pause-Zeit
             </label>
             <input
               type="time"
-              value={alarms.breakAlarm.time}
+              value={alarms.breakAlarm?.time || ''}
               onChange={(e) => onSetBreakAlarm(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
@@ -98,22 +98,22 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={alarms.endAlarm.enabled}
-              onChange={(e) => onToggleEndAlarm(e.target.checked)}
+              checked={alarms.endAlarm?.enabled || false}
+              onChange={(e) => onToggleEndAlarm?.(e.target.checked)}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
           </label>
         </div>
 
-        {alarms.endAlarm.enabled && (
+                  {alarms.endAlarm?.enabled && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Feierabend-Zeit
             </label>
             <input
               type="time"
-              value={alarms.endAlarm.time}
+              value={alarms.endAlarm?.time || ''}
               onChange={(e) => onSetEndAlarm(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
             />
@@ -137,15 +137,15 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={alarms.maxHoursWarning.enabled}
-              onChange={(e) => onToggleMaxHoursWarning(e.target.checked)}
+              checked={alarms.maxHoursWarning?.enabled || false}
+              onChange={(e) => onToggleMaxHoursWarning?.(e.target.checked)}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
           </label>
         </div>
 
-        {alarms.maxHoursWarning.enabled && (
+                  {alarms.maxHoursWarning?.enabled && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Maximale Stunden pro Tag
@@ -155,7 +155,7 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
               min="1"
               max="24"
               step="0.5"
-              value={alarms.maxHoursWarning.hours}
+              value={alarms.maxHoursWarning?.hours || 8}
               onChange={(e) => onSetMaxHoursWarning(parseFloat(e.target.value))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
             />
@@ -182,8 +182,8 @@ const AlarmSettings: React.FC<AlarmSettingsProps> = ({
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={alarms.pushNotifications}
-                onChange={(e) => onTogglePushNotifications(e.target.checked)}
+                checked={alarms.pushNotifications || false}
+                onChange={(e) => onTogglePushNotifications?.(e.target.checked)}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
