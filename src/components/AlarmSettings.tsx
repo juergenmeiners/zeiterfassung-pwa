@@ -12,7 +12,7 @@ interface AlarmSettingsProps {
   onToggleEndAlarm: (enabled: boolean) => void;
   onToggleMaxHoursWarning: (enabled: boolean) => void;
   onTogglePushNotifications: (enabled: boolean) => void;
-  onClearAlarm: () => void;
+  onClearAlarm: (type: string) => void;
   onTestAlarm: () => void;
   subscriptionStatus: string;
   isPushSupported: boolean;
