@@ -90,12 +90,18 @@ const {
 };
 
 const updateOrder = (id: number, field: keyof Order, value: string | number) => {
-  setOrders(orders.map(order => 
-    order.id === id ? { 
-      ...order, 
-      [field]: field === 'hours' ? (value === '' ? 0 : parseFloat(String(value))) : value 
-    } : order
-  ));
+  setOrders(orders.map(order => {
+    if (order.id === id) {
+      if (field === 'hours') {
+        // Behandle sowohl Komma als auch Punkt als Dezimaltrennzeichen
+        const stringValue = String(value).replace(',', '.');
+        const numericValue = stringValue === '' ? 0 : parseFloat(stringValue);
+        return { ...order, [field]: isNaN(numericValue) ? 0 : numericValue };
+      }
+      return { ...order, [field]: value };
+    }
+    return order;
+  }));
 };
   
  const getTotalHours = () => {
@@ -460,8 +466,19 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
   step="0.01"
   min="0"
   placeholder="0.00"
-  value={order.hours || ''}
-  onChange={(e) => updateOrder(order.id, 'hours', e.target.value)}
+  value={order.hours === 0 ? '' : order.hours}
+  onChange={(e) => {
+    // Behandle sowohl Komma als auch Punkt als Dezimaltrennzeichen
+    const value = e.target.value.replace(',', '.');
+    updateOrder(order.id, 'hours', value);
+  }}
+  onBlur={(e) => {
+    // Beim Verlassen des Feldes formatieren
+    if (e.target.value && !isNaN(parseFloat(e.target.value))) {
+      const formatted = parseFloat(e.target.value).toFixed(2);
+      updateOrder(order.id, 'hours', formatted);
+    }
+  }}
   className="w-24 p-2 border rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
 />
                         <span className="ml-1 text-sm text-gray-500">h</span>
