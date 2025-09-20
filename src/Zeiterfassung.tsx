@@ -95,10 +95,17 @@ const updateOrder = (id: number, field: keyof Order, value: string | number) => 
   setOrders(orders.map(order => {
     if (order.id === id) {
       if (field === 'hours') {
-        // Während der Eingabe als String belassen
+        // Immer als Number speichern, aber während der Eingabe String erlauben
         if (typeof value === 'string') {
-          const result = { ...order, [field]: value === '' ? 0 : value };
-          console.log('String input result:', result);
+          if (value === '') {
+            const result = { ...order, [field]: 0 };
+            console.log('Empty string result:', result);
+            return result;
+          }
+          // Versuche String zu Number zu konvertieren
+          const numValue = parseFloat(value.replace(',', '.'));
+          const result = { ...order, [field]: isNaN(numValue) ? 0 : numValue };
+          console.log('String conversion result:', result);
           return result;
         }
         // Numerische Werte direkt übernehmen
